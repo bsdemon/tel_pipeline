@@ -142,7 +142,7 @@ jobs:
           restore-keys: trivy-${{ runner.os }}-db
 
       - name: Build an image from Dockerfile
-        run: docker build -t docker.io/bsdemon/python-app:${{ github.sha }} -f docker/Dockerfile .
+        run: docker build -t docker.io/bsdemon/tel-app:${{ github.sha }} -f docker/Dockerfile .
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.28.0
         with:
@@ -164,4 +164,4 @@ jobs:
         with:
           push: true
           tags: docker.io/bsdemon/python-app:latest
-          file: ./deployment/docker/Dockerfile
+          file: ./docker/Dockerfile
