@@ -2,16 +2,19 @@ import os
 from typing import Dict
 
 from flask import Flask
+from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
+csrf = CSRFProtect()
+csrf.init_app(app)
 
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def home() -> str:
     return "App is running!"
 
 
-@app.route("/health/ready")
+@app.route("/health/ready", methods=["GET"])
 def liveness_probe() -> Dict[str, str]:
     return {"status": "ok"}
 
