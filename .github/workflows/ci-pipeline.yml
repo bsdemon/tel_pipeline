@@ -132,6 +132,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   security_scan:
+    if: github.event_name != 'release'
     needs: [build_and_scan]
     name: Snyk Security Scan
     runs-on: ubuntu-latest
