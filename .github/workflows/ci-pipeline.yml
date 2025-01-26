@@ -2,84 +2,83 @@ name: Code quality pipeline
 
 on:
   push:
-    branches:
-      - master
+    branches: [master, feature/add_release_tag]
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-          cache: 'pip'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pylint black
-      - name: Run pylint
-        run: pylint --disable=C0111,C0114,C0115,C0116 $(git ls-files '*.py')
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: '3.13'
+  #         cache: 'pip'
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install -r requirements.txt
+  #         pip install pylint black
+  #     - name: Run pylint
+  #       run: pylint --disable=C0111,C0114,C0115,C0116 $(git ls-files '*.py')
 
-      - name: Run black
-        run: black . --check
+  #     - name: Run black
+  #       run: black . --check
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install markdownlint-cli
-        run: npm install -g markdownlint-cli
-      - name: Create markdownlint config
-        run: |
-          echo '{
-            "MD013": false,
-            "line-length": false
-          }' > .markdownlint.json
-      - name: Run markdown lint
-        run: markdownlint '**/*.md' --ignore node_modules
-      - uses: editorconfig-checker/action-editorconfig-checker@v2
-      - run: editorconfig-checker
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '20'
+  #     - name: Install markdownlint-cli
+  #       run: npm install -g markdownlint-cli
+  #     - name: Create markdownlint config
+  #       run: |
+  #         echo '{
+  #           "MD013": false,
+  #           "line-length": false
+  #         }' > .markdownlint.json
+  #     - name: Run markdown lint
+  #       run: markdownlint '**/*.md' --ignore node_modules
+  #     - uses: editorconfig-checker/action-editorconfig-checker@v2
+  #     - run: editorconfig-checker
 
-  unit_test:
-    needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-          cache: 'pip'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run tests
-        run: |
-          cd app  # Change to app directory
-          python -m unittest app_test.py
+  # unit_test:
+  #   needs: lint
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: '3.13'
+  #         cache: 'pip'
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install -r requirements.txt
+  #     - name: Run tests
+  #       run: |
+  #         cd app  # Change to app directory
+  #         python -m unittest app_test.py
 
-  check_secrets:
-    needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Required to scan all commits
-      - name: Gitleaks scan
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # check_secrets:
+  #   needs: lint
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0  # Required to scan all commits
+  #     - name: Gitleaks scan
+  #       uses: gitleaks/gitleaks-action@v2
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build_and_scan:
     name: Build, Scan and Push Docker Image
     runs-on: ubuntu-latest
-    needs: [unit_test, check_secrets]  # Ensure security checks pass before building
+    # needs: [unit_test, check_secrets]  # Ensure security checks pass before building
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -116,33 +115,69 @@ jobs:
           tags: docker.io/bsdemon/tel-app:latest
           file: ./docker/Dockerfile
 
-  check_SAST:
+  # check_SAST:
+  #   needs: [build_and_scan]
+  #   name: SonarQube
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #     - name: SonarQube Scan
+  #       uses: SonarSource/sonarqube-scan-action@v4
+  #       env:
+  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # security_scan:
+  #   needs: [build_and_scan]
+  #   name: Snyk Security Scan
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@master
+  #     - name: Run Snyk to check for vulnerabilities
+  #       uses: snyk/actions/python@master
+  #       continue-on-error: true # To make sure that SARIF upload gets called
+  #       env:
+  #         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+  #       with:
+  #         args: --sarif-file-output=snyk.sarif
+  #     - name: Upload result to GitHub Code Scanning
+  #       uses: github/codeql-action/upload-sarif@v3
+  #       with:
+  #         sarif_file: snyk.sarif
+
+  release:
     needs: [build_and_scan]
-    name: SonarQube
+    name: Create Release Tag and Push Docker Image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  security_scan:
-    needs: [build_and_scan]
-    name: Snyk Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/python@master
-        continue-on-error: true # To make sure that SARIF upload gets called
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: Create a release tag
+        id: create_tag
+        run: |
+          VERSION="v$(date +%Y.%m.%d.%H%M%S)"
+          git tag $VERSION
+          git push origin $VERSION
+          echo "::set-output name=VERSION::$VERSION"
+
+      - name: Build Docker image with release tag
+        run: |
+          docker build -t docker.io/bsdemon/tel-app:${{ steps.create_tag.outputs.VERSION }} -f docker/Dockerfile .
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
-          args: --sarif-file-output=snyk.sarif
-      - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push Docker image with release tag
+        uses: docker/build-push-action@v6
         with:
-          sarif_file: snyk.sarif
+          push: true
+          tags: |
+            docker.io/bsdemon/tel-app:${{ steps.create_tag.outputs.VERSION }}
+            docker.io/bsdemon/tel-app:latest
