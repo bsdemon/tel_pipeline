@@ -3,7 +3,9 @@ name: Code quality pipeline
 on:
   push:
     branches:
-      - feature/pipeline
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   lint:
