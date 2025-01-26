@@ -24,3 +24,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+3. Install pre-commit-hooks
+```
+pre-commit install
+````
