@@ -1,30 +1,37 @@
 # tel_pipeline
+
 Example pipeline project
 
 ## Initial setup
 
 1. Clone project
-```
-git clone git@github.com:bsdemon/tel_pipeline.git
-```
-or
-```
-https://github.com/bsdemon/tel_pipeline.git
-```
-Then
-```
-cd tel_pipeline
-```
 
-2. Create virtual env and install depencies
+    ```bash
+    git clone git@github.com:bsdemon/tel_pipeline.git
+    ```
 
-```
-python -m venv .venv
+    or
 
-pip install -r requirements.txt
-```
+    ```bash
+    git clone https://github.com/bsdemon/tel_pipeline.git
+    ```
 
-3. Install pre-commit-hooks
-```
-pre-commit install
-````
+    Then
+
+    ```bash
+    cd tel_pipeline
+    ```
+
+1. Create virtual env and install depencies
+
+    ```bash
+    python -m venv .venv
+
+    pip install -r requirements.txt
+    ```
+
+1. Install pre-commit-hooks
+
+    ```bash
+    pre-commit install
+    ````
