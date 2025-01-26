@@ -168,10 +168,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Tag existing Docker image with release tag
-        run: |
-          docker tag docker.io/bsdemon/tel-app:latest docker.io/bsdemon/tel-app:${{ github.event.release.tag_name }}
-
       - name: Push Docker image with release tag
         uses: docker/build-push-action@v6
         with:
