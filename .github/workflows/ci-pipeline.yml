@@ -129,10 +129,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=devops-programme
+            -Dsonar.projectKey=tel_pipeline
             -Dsonar.organization=bsdemon
             -Dsonar.sources=.
-            -Dsonar.branch.name=pipeline_practice
+            -Dsonar.branch.name=master
 
   security_scan:
     needs: [build_and_scan]
