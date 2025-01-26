@@ -3,7 +3,7 @@ name: Code quality pipeline
 on:
   push:
     branches:
-      - pipeline_practice
+      - feature/pipeline
 
 jobs:
   lint:
