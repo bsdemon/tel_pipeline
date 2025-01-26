@@ -1,4 +1,5 @@
 # tel_pipeline
+Example pipeline project
 
 ## Initial setup
 
