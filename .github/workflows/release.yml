@@ -17,22 +17,22 @@ jobs:
           # Make sure we fetch all refs/branches/tags
           fetch-depth: 0
 
-      - name: Build an image from Dockerfile
-        run: docker build -t docker.io/bsdemon/tel-app:${{ github.event.release.tag_name }} -f docker/Dockerfile .
+      # - name: Build an image from Dockerfile
+      #   run: docker build -t docker.io/bsdemon/tel-app:${{ github.event.release.tag_name }} -f docker/Dockerfile .
 
-      - name: Login to Docker Hub
-        if: success()
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # - name: Login to Docker Hub
+      #   if: success()
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Push Docker image with release tag
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          tags: docker.io/bsdemon/tel-app:${{ github.event.release.tag_name }}
-          file: ./docker/Dockerfile
+      # - name: Push Docker image with release tag
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     push: true
+      #     tags: docker.io/bsdemon/tel-app:${{ github.event.release.tag_name }}
+      #     file: ./docker/Dockerfile
 
       - name: Git release tag on master
         if: success() && contains(github.event.release.tag_name, 'release')
@@ -40,18 +40,21 @@ jobs:
           # Configure git
           git config user.email "bsdemon@gmai.com"
           git config user.name "GitHub Actions"
+          echo "Tag name: ${{ github.event.release.tag_name }}"
+          echo "Branch name: ${{ github.ref }}"
+          echo "Should be master"
 
-          # Switch to 'master' and pull the latest
-          git checkout master
-          git pull
+          # # Switch to 'master' and pull the latest
+          # git checkout master
+          # git pull
 
-          # Update deployment.yaml using sed
-          sed "s/{{ github.event.release.tag_name }}/${{ github.event.release.tag_name }}/g" release/deploy.templ > release/deployment.yaml
+          # # Update deployment.yaml using sed
+          # sed "s/{{ github.event.release.tag_name }}/${{ github.event.release.tag_name }}/g" release/deploy.templ > release/deployment.yaml
 
-          # Commit and push
-          git add .
-          git commit -m "Updated release version for deploy ${{ github.event.release.tag_name }}"
-          git push origin master
+          # # Commit and push
+          # git add .
+          # git commit -m "Updated release version for deploy ${{ github.event.release.tag_name }}"
+          # git push origin master
 
       # If the tag is NOT on master, just run 'ls'
       - name: Git release any tag on develop
@@ -60,15 +63,18 @@ jobs:
           # Configure git
           git config user.email "bsdemon@gmai.com"
           git config user.name "GitHub Actions"
+          echo "Tag name: ${{ github.event.release.tag_name }}"
+          echo "Branch name: ${{ github.ref }}"
+          echo "Should be develop"
 
-          # Switch to 'develop' and pull the latest
-          git checkout develop
-          git pull
+          # # Switch to 'develop' and pull the latest
+          # git checkout develop
+          # git pull
 
-          # Update deployment.yaml using sed
-          sed "s/{{ github.event.release.tag_name }}/${{ github.event.release.tag_name }}/g" dev/deploy.templ > dev/deployment.yaml
+          # # Update deployment.yaml using sed
+          # sed "s/{{ github.event.release.tag_name }}/${{ github.event.release.tag_name }}/g" dev/deploy.templ > dev/deployment.yaml
 
-          # Commit and push
-          git add .
-          git commit -m "Updated release version for deploy ${{ github.event.release.tag_name }}"
-          git push origin develop
+          # # Commit and push
+          # git add .
+          # git commit -m "Updated release version for deploy ${{ github.event.release.tag_name }}"
+          # git push origin develop
