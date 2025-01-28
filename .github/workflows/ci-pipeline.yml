@@ -10,17 +10,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Push changes
-        run: |
-          # Configure git
-          git config --global user.email "bsdemon@gmai.com"
-          git config --global user.name "GitHub Actions"
 
-          # Create or switch to 'master' branch
-          git checkout master
-          git pull
-          ls -R
-          ls -la
       - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -54,6 +44,17 @@ jobs:
         run: markdownlint '**/*.md' --ignore node_modules
       - uses: editorconfig-checker/action-editorconfig-checker@v2
       - run: editorconfig-checker
+      - name: Push changes
+        run: |
+          # Configure git
+          git config --global user.email "bsdemon@gmai.com"
+          git config --global user.name "GitHub Actions"
+
+          # Create or switch to 'master' branch
+          git checkout master
+          git pull
+          ls -R
+          ls -la
 
   # unit_test:
   #   needs: lint
