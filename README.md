@@ -1,6 +1,6 @@
 # tel_pipeline
 
-Example pipeline project
+This steps will help you setup tel project
 
 ## Initial setup
 
