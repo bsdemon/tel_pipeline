@@ -17,20 +17,6 @@ jobs:
           # Make sure we fetch all refs/branches/tags
           fetch-depth: 0
 
-      - name: Check if tag is on master
-        id: check_tag
-        run: |
-          # Get commit SHA for the newly created tag
-          TAG_COMMIT=$(git rev-list -n 1 ${{ github.event.release.tag_name }})
-
-          # Check if 'master' branch contains that commit
-          if git branch --contains "$TAG_COMMIT" | grep -q 'master'; then
-            echo "on_branch=master" >> $GITHUB_OUTPUT
-          fi
-          if git branch --contains "$TAG_COMMIT" | grep -q 'develop'; then
-            echo "on_branch=develop" >> $GITHUB_OUTPUT
-          fi
-
       - name: Build an image from Dockerfile
         run: docker build -t docker.io/bsdemon/tel-app:${{ github.event.release.tag_name }} -f docker/Dockerfile .
 
@@ -49,7 +35,7 @@ jobs:
           file: ./docker/Dockerfile
 
       - name: Git release tag on master
-        if: success() && steps.check_tag.outputs.on_branch == 'master'
+        if: success() && contains(github.event.release.tag_name, 'release')
         run: |
           # Configure git
           git config user.email "bsdemon@gmai.com"
@@ -69,7 +55,7 @@ jobs:
 
       # If the tag is NOT on master, just run 'ls'
       - name: Git release any tag on develop
-        if: success() && steps.check_tag.outputs.on_branch == 'develop'
+        if: success() && contains(github.event.release.tag_name, 'test')
         run: |
           # Configure git
           git config user.email "bsdemon@gmai.com"
