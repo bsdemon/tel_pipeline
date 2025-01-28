@@ -39,13 +39,13 @@ jobs:
           git config --global user.email "bsdemon@gmai.com"
           git config --global user.name "GitHub Actions"
 
-          # Create or switch to 'main' branch
-          git checkout main
+          # Create or switch to 'master' branch
+          git checkout master
           git pull
 
           # Update version.h with the current run number
           sed "s/{{ github.event.release.tag_name }}/${{ github.event.release.tag_name }}/g" deploy/deploy.templ > deploy/deployment.yaml
           # Commit and push
-          git add version.h
-          git commit -m "Updated version.h during build ${{ github.run_number }}"
-          git push origin main
+          git add ,
+          git commit -m "Updated release version for deploy ${{ github.event.release.tag_name }}"
+          git push origin master

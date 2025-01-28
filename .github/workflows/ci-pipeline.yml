@@ -2,7 +2,7 @@ name: Code quality pipeline
 
 on:
   push:
-    branches: [master, feature/add_release_tag]
+    branches: [master]
   pull_request:
     types: [opened]
 
