@@ -45,9 +45,6 @@ jobs:
           # Configure git
           git config user.email "bsdemon@gmai.com"
           git config user.name "GitHub Actions"
-          echo "Tag name: ${{ github.event.release.tag_name }}"
-          echo "Branch name: ${{ github.ref }}"
-          echo "Should be master"
 
           # Switch to 'master' and pull the latest
           git checkout master
@@ -68,9 +65,6 @@ jobs:
           # Configure git
           git config user.email "bsdemon@gmai.com"
           git config user.name "GitHub Actions"
-          echo "Tag name: ${{ github.event.release.tag_name }}"
-          echo "Branch name: ${{ github.ref }}"
-          echo "Should be develop"
 
           # Switch to 'develop' and pull the latest
           git checkout develop
