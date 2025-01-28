@@ -46,6 +46,6 @@ jobs:
           # Update version.h with the current run number
           sed "s/{{ github.event.release.tag_name }}/${{ github.event.release.tag_name }}/g" release/deploy.templ > release/deployment.yaml
           # Commit and push
-          git add ,
+          git add .
           git commit -m "Updated release version for deploy ${{ github.event.release.tag_name }}"
           git push origin master
