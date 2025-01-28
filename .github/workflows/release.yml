@@ -16,6 +16,11 @@ jobs:
         with:
           # Make sure we fetch all refs/branches/tags
           fetch-depth: 0
+      - name: debug
+        run : |
+          echo "Tag name: ${{ github.event.release.tag_name }}"
+          echo "Branch name: ${{ github.ref }}"
+          echo "Should be master"
 
       # - name: Build an image from Dockerfile
       #   run: docker build -t docker.io/bsdemon/tel-app:${{ github.event.release.tag_name }} -f docker/Dockerfile .
