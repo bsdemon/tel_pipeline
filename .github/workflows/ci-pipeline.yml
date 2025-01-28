@@ -7,18 +7,18 @@ on:
     types: [opened]
 
 jobs:
-  debug:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Debug - list files
-        run: |
-          ls -R
-          ls -la
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Debug - list files
+      - name: Push changes
         run: |
+          # Configure git
+          git config --global user.email "bsdemon@gmai.com"
+          git config --global user.name "GitHub Actions"
+
+          # Create or switch to 'master' branch
+          git checkout master
+          git pull
           ls -R
           ls -la
       - uses: actions/checkout@v4
