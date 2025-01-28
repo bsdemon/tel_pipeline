@@ -14,7 +14,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          # Make sure we fetch all refs/branches/tags
           fetch-depth: 0
+
+      - name: Check if tag is on master
+        id: check_tag
+        run: |
+          # Get commit SHA for the newly created tag
+          TAG_COMMIT=$(git rev-list -n 1 ${{ github.event.release.tag_name }})
+
+          # Check if 'master' branch contains that commit
+          if git branch --contains "$TAG_COMMIT" | grep -q 'master'; then
+            echo "on_branch=master" >> $GITHUB_OUTPUT
+          fi
+          if git branch --contains "$TAG_COMMIT" | grep -q 'develop'; then
+            echo "on_branch=develop" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build an image from Dockerfile
         run: docker build -t docker.io/bsdemon/tel-app:${{ github.event.release.tag_name }} -f docker/Dockerfile .
 
@@ -32,20 +48,41 @@ jobs:
           tags: docker.io/bsdemon/tel-app:${{ github.event.release.tag_name }}
           file: ./docker/Dockerfile
 
-      - name: Push changes
-        if: success()
+      - name: Git release tag on master
+        if: success() && steps.check_tag.outputs.on_branch == 'master'
         run: |
           # Configure git
-          git config --global user.email "bsdemon@gmai.com"
-          git config --global user.name "GitHub Actions"
+          git config user.email "bsdemon@gmai.com"
+          git config user.name "GitHub Actions"
 
-          # Create or switch to 'master' branch
+          # Switch to 'master' and pull the latest
           git checkout master
           git pull
 
-          # Update version.h with the current run number
+          # Update deployment.yaml using sed
           sed "s/{{ github.event.release.tag_name }}/${{ github.event.release.tag_name }}/g" release/deploy.templ > release/deployment.yaml
+
           # Commit and push
           git add .
           git commit -m "Updated release version for deploy ${{ github.event.release.tag_name }}"
           git push origin master
+
+      # If the tag is NOT on master, just run 'ls'
+      - name: Git release any tag on develop
+        if: success() && steps.check_tag.outputs.on_branch == 'develop'
+        run: |
+          # Configure git
+          git config user.email "bsdemon@gmai.com"
+          git config user.name "GitHub Actions"
+
+          # Switch to 'develop' and pull the latest
+          git checkout develop
+          git pull
+
+          # Update deployment.yaml using sed
+          sed "s/{{ github.event.release.tag_name }}/${{ github.event.release.tag_name }}/g" dev/deploy.templ > dev/deployment.yaml
+
+          # Commit and push
+          git add .
+          git commit -m "Updated release version for deploy ${{ github.event.release.tag_name }}"
+          git push origin develop
