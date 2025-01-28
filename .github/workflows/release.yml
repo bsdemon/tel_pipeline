@@ -148,6 +148,7 @@ jobs:
           sarif_file: snyk.sarif
 
   release:
+    needs: [security_scan, check_SAST]
     name: Tag and Push Docker Image on Release
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
