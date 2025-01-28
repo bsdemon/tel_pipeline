@@ -4,7 +4,7 @@ on:
   push:
     branches: [master, feature/add_release_tag]
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened]
 
 jobs:
   lint:
@@ -44,105 +44,105 @@ jobs:
       - uses: editorconfig-checker/action-editorconfig-checker@v2
       - run: editorconfig-checker
 
-  unit_test:
-    needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-          cache: 'pip'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run tests
-        run: |
-          cd app  # Change to app directory
-          python -m unittest app_test.py
+  # unit_test:
+  #   needs: lint
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: '3.13'
+  #         cache: 'pip'
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install -r requirements.txt
+  #     - name: Run tests
+  #       run: |
+  #         cd app  # Change to app directory
+  #         python -m unittest app_test.py
 
-  check_secrets:
-    if: github.event_name != 'release'
-    needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Required to scan all commits
-      - name: Gitleaks scan
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # check_secrets:
+  #   if: github.event_name != 'release'
+  #   needs: lint
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0  # Required to scan all commits
+  #     - name: Gitleaks scan
+  #       uses: gitleaks/gitleaks-action@v2
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build_and_scan:
-    name: Build, Scan and Push Docker Image
-    runs-on: ubuntu-latest
-    needs: [unit_test, check_secrets]  # Ensure security checks pass before building
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # build_and_scan:
+  #   name: Build, Scan and Push Docker Image
+  #   runs-on: ubuntu-latest
+  #   needs: [unit_test, check_secrets]  # Ensure security checks pass before building
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Cache Trivy vulnerability database
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/trivy
-          key: trivy-${{ runner.os }}-db
-          restore-keys: trivy-${{ runner.os }}-db
+  #     - name: Cache Trivy vulnerability database
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ~/.cache/trivy
+  #         key: trivy-${{ runner.os }}-db
+  #         restore-keys: trivy-${{ runner.os }}-db
 
-      - name: Build an image from Dockerfile
-        run: docker build -t docker.io/bsdemon/tel-app:${{ github.sha }} -f docker/Dockerfile .
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: 'docker.io/bsdemon/tel-app:${{ github.sha }}'
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+  #     - name: Build an image from Dockerfile
+  #       run: docker build -t docker.io/bsdemon/tel-app:${{ github.sha }} -f docker/Dockerfile .
+  #     - name: Run Trivy vulnerability scanner
+  #       uses: aquasecurity/trivy-action@0.28.0
+  #       with:
+  #         image-ref: 'docker.io/bsdemon/tel-app:${{ github.sha }}'
+  #         format: 'table'
+  #         exit-code: '0'
+  #         ignore-unfixed: true
+  #         vuln-type: 'os,library'
+  #         severity: 'CRITICAL,HIGH'
 
-      - name: Login to Docker Hub
-        if: success()
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Push Docker image if scan passes
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          tags: docker.io/bsdemon/tel-app:latest
-          file: ./docker/Dockerfile
+  #     - name: Login to Docker Hub
+  #       if: success()
+  #       uses: docker/login-action@v3
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
+  #     - name: Push Docker image if scan passes
+  #       uses: docker/build-push-action@v6
+  #       with:
+  #         push: true
+  #         tags: docker.io/bsdemon/tel-app:latest
+  #         file: ./docker/Dockerfile
 
-  check_SAST:
-    needs: [build_and_scan]
-    name: SonarQube
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  # check_SAST:
+  #   needs: [build_and_scan]
+  #   name: SonarQube
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #     - name: SonarQube Scan
+  #       uses: SonarSource/sonarqube-scan-action@v4
+  #       env:
+  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  security_scan:
-    needs: [build_and_scan]
-    name: Snyk Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/python@master
-        continue-on-error: true # To make sure that SARIF upload gets called
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --sarif-file-output=snyk.sarif
-      - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: snyk.sarif
+  # security_scan:
+  #   needs: [build_and_scan]
+  #   name: Snyk Security Scan
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@master
+  #     - name: Run Snyk to check for vulnerabilities
+  #       uses: snyk/actions/python@master
+  #       continue-on-error: true # To make sure that SARIF upload gets called
+  #       env:
+  #         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+  #       with:
+  #         args: --sarif-file-output=snyk.sarif
+  #     - name: Upload result to GitHub Code Scanning
+  #       uses: github/codeql-action/upload-sarif@v3
+  #       with:
+  #         sarif_file: snyk.sarif

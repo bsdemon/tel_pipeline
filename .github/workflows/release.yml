@@ -31,3 +31,21 @@ jobs:
           push: true
           tags: docker.io/bsdemon/tel-app:${{ github.event.release.tag_name }}
           file: ./docker/Dockerfile
+
+      - name: Push changes
+        if: success()
+        run: |
+          # Configure git
+          git config --global user.email "bsdemon@gmai.com"
+          git config --global user.name "GitHub Actions"
+
+          # Create or switch to 'main' branch
+          git checkout main
+          git pull
+
+          # Update version.h with the current run number
+          sed "s/{{ github.event.release.tag_name }}/${{ github.event.release.tag_name }}/g" deploy/deploy.templ > deploy/deployment.yaml
+          # Commit and push
+          git add version.h
+          git commit -m "Updated version.h during build ${{ github.run_number }}"
+          git push origin main

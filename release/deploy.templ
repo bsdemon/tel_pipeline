@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tel-deployment
+  namespace: argocd
+spec:
+  selector:
+    matchLabels:
+      app: tel
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: tel
+    spec:
+      containers:
+        - name: tel-app
+          image: bsdemon/tel-app:{{ github.event.release.tag_name }}
+          ports:
+            - containerPort: 3000
